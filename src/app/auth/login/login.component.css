@@ -1,0 +1,11 @@
+mat-form-field, input {
+  width: 100%;
+}
+
+mat-spinner {
+  margin: auto;
+}
+
+.spacer {
+  margin-left: 20px;
+}
