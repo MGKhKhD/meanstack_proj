@@ -1,0 +1,6 @@
+{
+  "env": {
+    "JWT_KEY": "secretOfJWT_KEY",
+    "MONGO_LOCALHOST": "mongodb://localhost:27017/meanstack"
+  }
+}
