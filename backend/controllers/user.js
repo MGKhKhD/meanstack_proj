@@ -2,11 +2,11 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const User = require("../models/user");
+const User = require("../models/User");
 
 exports.signupUser = (req, res) => {
   const {email, password, username} = req.body;
-  User.findOne({email: email}).then(rec => {
+  User.findOne({where: {email: email}}).then(rec => {
     if(rec) {
       res.status(500).json({message: "User is already registered"});
     } else {
@@ -14,10 +14,9 @@ exports.signupUser = (req, res) => {
     }
   })
   .then(hashedPass => {
-    const user = new User({
+    return User.create({
       username, email, password: hashedPass
     });
-    return user.save()
   })
   .then(doc => {
     res.status(201).json({
@@ -38,7 +37,7 @@ exports.signupUser = (req, res) => {
 exports.loginUser = (req, res) => {
   const {email, password} = req.body;
   let fetchedUser;
-  User.findOne({email: email}).then(user => {
+  User.findOne({where: {email: email}}).then(user => {
     if(user) {
       fetchedUser = user;
       return bcrypt.compare(password, user.password)

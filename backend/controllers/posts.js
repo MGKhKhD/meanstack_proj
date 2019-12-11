@@ -1,22 +1,22 @@
 
-const Post = require('../models/post');
+const Post = require('../models/Post');
+const sequelize = require('../sequelize_connection');
 
 exports.createPost = (req, res) => {
   const url = req.protocol + "://" + req.get("host");
-  const post = new Post({
+  Post.create({
     title: req.body.title,
     content: req.body.content,
     imagePath: url + "/images/" + req.file.filename,
-    creator: req.userData.userId
-  });
-  post.save().then(result => {
+    userId: req.userData.userId
+  }).then(result => {
     const {title, content, imagePath} = result;
     res.status(201).json({
       post: {
         id: result._id,
         title, content, imagePath,
         username: req.userData.username,
-        userId: req.userData.userId
+        creator: req.userData.userId
       },
       message: 'post added successfully'});
   })
@@ -35,13 +35,12 @@ exports.updatePost = (req, res) => {
    }
 
 
-  Post.updateOne({_id: req.params.postId, creator: req.userData.userId},
-    {title: req.body.title,
-      content: req.body.content,
-      imagePath,
-      creator: req.userData.userId
-    })
-      .then(result => {
+  Post.update({title: req.body.title,
+    content: req.body.content,
+    imagePath,
+    userId: req.userData.userId
+  }, {id: req.params.postId, userId: req.userData.userId},
+    ).then(result => {
         if (result.n > 0) {
           res.status(200).json({
             imagePath: imagePath,
@@ -59,13 +58,13 @@ exports.updatePost = (req, res) => {
 };
 
 exports.getPost = (req, res) => {
-  Post.findById(req.params.postId).then(rec => {
+  Post.findByPk(req.params.postId).then(rec => {
     if(rec) {
       const post = {id: rec._id,
         title: rec.title,
         content: rec.content,
         imagePath: rec.imagePath,
-      creator: rec.creator};
+      creator: rec.userId};
       res.status(200).json(post);
     } else {
       res.status(500).json({message: "No record found"});
@@ -80,20 +79,22 @@ exports.getPost = (req, res) => {
 exports.getPosts = (req, res) => {
   const pageSize = +req.query.pageSize;
   const currentPage = +req.query.page;
-  const postQuery = Post.find();
+  let limit = 0;
+  let offset = 0;
   let posts;
   if(pageSize && currentPage) {
-    postQuery.skip(pageSize * (currentPage - 1))
-    .limit(pageSize);
+    offset = pageSize * (currentPage - 1);
+    limit = pageSize;
   }
-  postQuery.then(records => {
+  Post.findAll({order: [['createdAt', 'DESC']], limit: limit, offset: offset, raw: true })
+  .then(records => {
     posts = records.map(rec =>
-      ({id: rec._id,
+      ({id: rec.id,
         title: rec.title,
         content: rec.content,
         imagePath: rec.imagePath,
-      creator: rec.creator}));
-    return Post.countDocuments();
+      creator: rec.userId}));
+    return Post.count();
   })
   .then(count => {
     return res.status(200).json({ posts, totalPosts: count,
@@ -105,7 +106,7 @@ exports.getPosts = (req, res) => {
 };
 
 exports.deletePost = (req, res) => {
-  Post.deleteOne({_id: req.params.postId, creator: req.userData.userId})
+  Post.destroy({where: {id: req.params.postId, userId: req.userData.userId}})
   .then(result => {
     if (result.n > 0) {
       res.status(200).json({ message: 'Successfully deleted data' });

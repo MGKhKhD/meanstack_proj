@@ -1,16 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+
 const path = require('path');
 
-mongoose.connect(process.env.MONGO_LOCALHOST, {useNewUrlParser: true})
-.then(() => {
-  console.log('database is connected');
-})
-.catch(err => {
-  console.error(err);
-});
+// const mongoose = require('mongoose');
+// mongoose.connect(process.env.MONGO_LOCALHOST, {useNewUrlParser: true})
+// .then(() => {
+//   console.log('database is connected');
+// })
+// .catch(err => {
+//   console.error(err);
+// });
+
+require('./sequelize_connection');
 
 const app = express();
 app.use(bodyParser.json());
