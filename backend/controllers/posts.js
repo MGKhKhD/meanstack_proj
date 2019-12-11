@@ -1,6 +1,5 @@
 
 const Post = require('../models/Post');
-const sequelize = require('../sequelize_connection');
 
 exports.createPost = (req, res) => {
   const url = req.protocol + "://" + req.get("host");
